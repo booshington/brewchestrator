@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Kitchen system",
+    "batch_size": 5,
+    "boil_time": 60,
+    "id": 1
+  },
+  {
+    "name": "15 Gal System",
+    "batch_size": 15,
+    "boil_time": 60,
+    "id": 2
+  }
+]

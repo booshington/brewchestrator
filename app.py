@@ -406,6 +406,34 @@ def manage_equipment():
             json.dump(equipment, f, indent=2)
         return jsonify({'success': True})
 
+@app.route('/api/mash', methods=['GET', 'POST', 'DELETE'])
+def manage_mash():
+    mash_file = 'mash.json'
+    
+    if os.path.exists(mash_file):
+        with open(mash_file, 'r') as f:
+            mash = json.load(f)
+    else:
+        mash = []
+    
+    if request.method == 'GET':
+        return jsonify(mash)
+    
+    if request.method == 'POST':
+        new_mash = request.json
+        new_mash['id'] = max([m.get('id', 0) for m in mash], default=0) + 1
+        mash.append(new_mash)
+        with open(mash_file, 'w') as f:
+            json.dump(mash, f, indent=2)
+        return jsonify(new_mash)
+    
+    if request.method == 'DELETE':
+        mash_id = request.json.get('id')
+        mash = [m for m in mash if m.get('id') != mash_id]
+        with open(mash_file, 'w') as f:
+            json.dump(mash, f, indent=2)
+        return jsonify({'success': True})
+
 @app.route('/api/bjcp/styles')
 def get_bjcp_styles():
     styles = [

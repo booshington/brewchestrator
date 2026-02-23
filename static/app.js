@@ -310,6 +310,11 @@ function renderRecipeForm() {
                 <label>Brewer Name</label>
                 <input type="text" id="brewer" value="${currentRecipe ? currentRecipe.brewer : ''}" required>
                 
+                <label>Equipment Profile</label>
+                <select id="equipment" onchange="handleEquipmentChange()">
+                    <option value="">Manual entry...</option>
+                </select>
+                
                 <label>Batch Size (gallons)</label>
                 <input type="number" id="batch_size" value="${currentRecipe ? currentRecipe.batch_size : 5}" step="0.1" required>
                 
@@ -379,6 +384,7 @@ function renderRecipeForm() {
     `;
     
     populateStyleSelect();
+    populateEquipmentSelect();
     setupIngredientSearch('grain', 'grainSearch', 'grainResults', addGrain);
     setupIngredientSearch('hop', 'hopSearch', 'hopResults', addHop);
     setupIngredientSearch('yeast', 'yeastSearch', 'yeastResults', addYeast);
@@ -423,6 +429,38 @@ function handleStyleChange() {
     const select = document.getElementById('style');
     selectedStyle = styles.find(s => s.id === select.value);
     updateVisualization();
+}
+
+async function populateEquipmentSelect() {
+    const res = await fetch('/api/equipment');
+    if (!res.ok) return;
+    
+    const equipment = await res.json();
+    const select = document.getElementById('equipment');
+    equipment.forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = e.id;
+        opt.textContent = e.name;
+        if (currentRecipe && currentRecipe.equipment_id === e.id) {
+            opt.selected = true;
+        }
+        select.appendChild(opt);
+    });
+}
+
+function handleEquipmentChange() {
+    const select = document.getElementById('equipment');
+    if (!select.value) return;
+    
+    fetch('/api/equipment')
+        .then(res => res.json())
+        .then(equipment => {
+            const selected = equipment.find(e => e.id === +select.value);
+            if (selected) {
+                document.getElementById('batch_size').value = selected.batch_size;
+                calculate();
+            }
+        });
 }
 
 function setupIngredientSearch(type, inputId, resultsId, addCallback) {
@@ -659,11 +697,13 @@ async function saveRecipe(e) {
     });
     const stats = await res.json();
     
+    const equipmentSelect = document.getElementById('equipment');
     const recipe = {
         name: document.getElementById('name').value,
         brewer: document.getElementById('brewer').value,
         style: document.getElementById('style').selectedOptions[0].text,
         batch_size,
+        equipment_id: equipmentSelect.value ? +equipmentSelect.value : null,
         tags: document.getElementById('tags').value,
         grains,
         hops,
@@ -786,23 +826,28 @@ function switchTab(e, tabName) {
     e.target.classList.add('active');
     document.getElementById(tabName + 'Tab').classList.add('active');
     
-    if (tabName === 'ingredients') {
+    if (tabName === 'config') {
         loadIngredientTable('grain');
-    } else if (tabName === 'equipment') {
-        loadEquipmentTable();
     } else if (tabName === 'styles') {
         loadStylesTable();
     }
 }
 
-function switchIngredientSubTab(e, subTabName) {
-    document.querySelectorAll('#ingredientsTab .tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('#ingredientsTab .sub-tab-content').forEach(t => t.style.display = 'none');
+function switchConfigSubTab(e, subTabName) {
+    document.querySelectorAll('#configTab .tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#configTab .sub-tab-content').forEach(t => t.style.display = 'none');
     
     e.target.classList.add('active');
     document.getElementById(subTabName + 'SubTab').style.display = 'block';
     
-    loadIngredientTable(subTabName === 'grains' ? 'grain' : subTabName === 'hops' ? 'hop' : subTabName === 'yeasts' ? 'yeast' : 'misc');
+    if (subTabName === 'equipment') {
+        loadEquipmentTable();
+    } else if (subTabName === 'mash') {
+        loadMashTable();
+    } else {
+        const type = subTabName === 'grains' ? 'grain' : subTabName === 'hops' ? 'hop' : subTabName === 'yeasts' ? 'yeast' : 'misc';
+        loadIngredientTable(type);
+    }
 }
 
 function switchRecipeSubTab(e, subTabName) {
@@ -880,6 +925,76 @@ async function deleteEquipment(id) {
         loadEquipmentTable();
     } else {
         alert('Failed to delete equipment');
+    }
+}
+
+async function loadMashTable() {
+    const res = await fetch('/api/mash');
+    if (!res.ok) return;
+    
+    const mash = await res.json();
+    const table = document.getElementById('mashTable');
+    
+    table.innerHTML = `
+        <table>
+            <thead><tr><th>Name</th><th>Temp (°F)</th><th>Time (min)</th><th>Actions</th></tr></thead>
+            <tbody>
+                ${mash.map(m => `
+                    <tr>
+                        <td>${m.name}</td>
+                        <td>${m.temp}</td>
+                        <td>${m.time}</td>
+                        <td>
+                            <button class="btn btn-small" style="background: #dc2626;" onclick="deleteMash(${m.id})">Delete</button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+async function addNewMash() {
+    const mash = {
+        name: document.getElementById('newMashName').value,
+        temp: +document.getElementById('newMashTemp').value,
+        time: +document.getElementById('newMashTime').value
+    };
+    
+    if (!mash.name) {
+        alert('Please enter a name');
+        return;
+    }
+    
+    const res = await fetch('/api/mash', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mash)
+    });
+    
+    if (res.ok) {
+        document.getElementById('newMashName').value = '';
+        document.getElementById('newMashTemp').value = '152';
+        document.getElementById('newMashTime').value = '60';
+        loadMashTable();
+    } else {
+        alert('Failed to add mash profile');
+    }
+}
+
+async function deleteMash(id) {
+    if (!confirm('Delete this mash profile?')) return;
+    
+    const res = await fetch('/api/mash', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+    });
+    
+    if (res.ok) {
+        loadMashTable();
+    } else {
+        alert('Failed to delete mash profile');
     }
 }
 

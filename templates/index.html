@@ -27,8 +27,7 @@
             <div class="tabs" style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; gap: 10px;">
                     <div class="tab active" onclick="switchTab(event, 'recipes')">Recipes</div>
-                    <div class="tab" onclick="switchTab(event, 'ingredients')">Ingredients</div>
-                    <div class="tab" onclick="switchTab(event, 'equipment')">Equipment</div>
+                    <div class="tab" onclick="switchTab(event, 'config')">Config</div>
                     <div class="tab" onclick="switchTab(event, 'styles')">BJCP Styles</div>
                 </div>
                 <div style="display: flex; gap: 10px;">
@@ -48,14 +47,16 @@
                 </div>
             </div>
             
-            <div id="ingredientsTab" class="tab-content">
+            <div id="configTab" class="tab-content">
                 <div class="recipe-detail">
-                    <h1>Ingredient Management</h1>
+                    <h1>Configuration</h1>
                     <div class="tabs" style="margin: 20px 0; border-bottom: 2px solid #e5e7eb;">
-                        <div class="tab active" onclick="switchIngredientSubTab(event, 'grains')">Grains</div>
-                        <div class="tab" onclick="switchIngredientSubTab(event, 'hops')">Hops</div>
-                        <div class="tab" onclick="switchIngredientSubTab(event, 'yeasts')">Yeasts</div>
-                        <div class="tab" onclick="switchIngredientSubTab(event, 'misc')">Misc</div>
+                        <div class="tab active" onclick="switchConfigSubTab(event, 'grains')">Grains</div>
+                        <div class="tab" onclick="switchConfigSubTab(event, 'hops')">Hops</div>
+                        <div class="tab" onclick="switchConfigSubTab(event, 'yeasts')">Yeasts</div>
+                        <div class="tab" onclick="switchConfigSubTab(event, 'misc')">Misc</div>
+                        <div class="tab" onclick="switchConfigSubTab(event, 'equipment')">Equipment</div>
+                        <div class="tab" onclick="switchConfigSubTab(event, 'mash')">Mash Profiles</div>
                     </div>
                     
                     <div id="grainsSubTab" class="sub-tab-content" style="display: block;">
@@ -110,22 +111,34 @@
                         </div>
                         <div class="ingredient-table" id="miscTable"></div>
                     </div>
-                </div>
-            </div>
-            
-            <div id="equipmentTab" class="tab-content">
-                <div class="recipe-detail">
-                    <h1>Equipment Profiles</h1>
-                    <div class="add-ingredient-form">
-                        <h2>Add New Equipment Profile</h2>
-                        <div class="form-row">
-                            <div><label>Name</label><input type="text" id="newEquipmentName"></div>
-                            <div><label>Batch Size (gal)</label><input type="number" id="newEquipmentBatchSize" value="5" step="0.1"></div>
-                            <div><label>Boil Time (min)</label><input type="number" id="newEquipmentBoilTime" value="60"></div>
+                    
+                    <div id="equipmentSubTab" class="sub-tab-content" style="display: none;">
+                        <h2>Equipment Profiles</h2>
+                        <div class="add-ingredient-form">
+                            <h3>Add New Equipment Profile</h3>
+                            <div class="form-row">
+                                <div><label>Name</label><input type="text" id="newEquipmentName"></div>
+                                <div><label>Batch Size (gal)</label><input type="number" id="newEquipmentBatchSize" value="5" step="0.1"></div>
+                                <div><label>Boil Time (min)</label><input type="number" id="newEquipmentBoilTime" value="60"></div>
+                            </div>
+                            <button class="btn" onclick="addNewEquipment()">Add Equipment</button>
                         </div>
-                        <button class="btn" onclick="addNewEquipment()">Add Equipment</button>
+                        <div class="ingredient-table" id="equipmentTable"></div>
                     </div>
-                    <div class="ingredient-table" id="equipmentTable"></div>
+                    
+                    <div id="mashSubTab" class="sub-tab-content" style="display: none;">
+                        <h2>Mash Profiles</h2>
+                        <div class="add-ingredient-form">
+                            <h3>Add New Mash Profile</h3>
+                            <div class="form-row">
+                                <div><label>Name</label><input type="text" id="newMashName"></div>
+                                <div><label>Temp (°F)</label><input type="number" id="newMashTemp" value="152"></div>
+                                <div><label>Time (min)</label><input type="number" id="newMashTime" value="60"></div>
+                            </div>
+                            <button class="btn" onclick="addNewMash()">Add Mash Profile</button>
+                        </div>
+                        <div class="ingredient-table" id="mashTable"></div>
+                    </div>
                 </div>
             </div>
             
@@ -137,13 +150,7 @@
                 </div>
             </div>
             
-            <div id="stylesTab" class="tab-content">
 
-                <div class="recipe-detail">
-                    <h1>BJCP Styles</h1>
-                    <p style="padding: 20px;">Duplicate tab - this should be removed</p>
-                </div>
-            </div>
         </div>
     </div>
 
