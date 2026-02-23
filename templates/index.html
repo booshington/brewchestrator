@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Brewchestrator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <div class="left-column" id="leftColumn">
+            <div class="resize-handle" id="resizeHandle"></div>
+            <div class="header">
+                <h1>🍺 Recipes</h1>
+                <div id="directorySection">
+                    <label style="font-size: 0.85em; color: #666; display: block; margin-bottom: 5px;">Recipe Directory</label>
+                    <input type="text" id="directoryInput" placeholder="C:\Users\username\recipes or /home/user/recipes" style="width: 100%; margin-bottom: 10px;">
+                    <button class="btn" style="width: 100%; background: #059669;" onclick="setDirectory()">Set Directory</button>
+                    <p style="font-size: 0.8em; color: #999; margin-top: 10px;">This directory will be saved and loaded automatically next time.</p>
+                </div>
+                <div id="recipeActions" style="display: none; margin-top: 15px;">
+                    <button class="btn btn-primary" onclick="createNewRecipe()">New Recipe</button>
+                    <label class="btn" style="background: #059669; cursor: pointer;">
+                        Import
+                        <input type="file" id="importFile" accept=".xml" style="display: none;">
+                    </label>
+                </div>
+            </div>
+            <div id="recipeList" class="recipe-list"></div>
+        </div>
+        
+        <div class="right-column">
+            <div id="recipeDetail" class="recipe-detail">
+                <div class="empty-state">
+                    <h2>Select a recipe or create a new one</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
