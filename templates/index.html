@@ -10,29 +10,127 @@
             <div class="resize-handle" id="resizeHandle"></div>
             <div class="header">
                 <h1>🍺 Recipes</h1>
-                <div id="directorySection">
-                    <label style="font-size: 0.85em; color: #666; display: block; margin-bottom: 5px;">Recipe Directory</label>
-                    <input type="text" id="directoryInput" placeholder="C:\Users\username\recipes or /home/user/recipes" style="width: 100%; margin-bottom: 10px;">
-                    <button class="btn" style="width: 100%; background: #059669;" onclick="setDirectory()">Set Directory</button>
-                    <p style="font-size: 0.8em; color: #999; margin-top: 10px;">This directory will be saved and loaded automatically next time.</p>
-                </div>
-                <div id="recipeActions" style="display: none; margin-top: 15px;">
+                <div id="recipeActions">
+                    <input type="text" id="searchBox" class="search-box" placeholder="Search recipes..." oninput="handleSearch()">
                     <button class="btn btn-primary" onclick="createNewRecipe()">New Recipe</button>
                     <label class="btn" style="background: #059669; cursor: pointer;">
                         Import
                         <input type="file" id="importFile" accept=".xml" style="display: none;">
                     </label>
+                    <div class="folder-section">
+                        <label style="font-size: 0.85em; color: #666; display: block; margin: 15px 0 5px;">Filter by Tags</label>
+                        <div id="tagFilter"></div>
+                    </div>
                 </div>
             </div>
             <div id="recipeList" class="recipe-list"></div>
         </div>
         
         <div class="right-column">
-            <div id="recipeDetail" class="recipe-detail">
-                <div class="empty-state">
-                    <h2>Select a recipe or create a new one</h2>
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab(event, 'recipes')">Recipes</div>
+                <div class="tab" onclick="switchTab(event, 'grains')">Grains</div>
+                <div class="tab" onclick="switchTab(event, 'hops')">Hops</div>
+                <div class="tab" onclick="switchTab(event, 'yeasts')">Yeasts</div>
+                <div class="tab" onclick="switchTab(event, 'styles')">BJCP Styles</div>
+                <div class="tab" onclick="switchTab(event, 'misc')">Misc</div>
+            </div>
+            
+            <div id="recipesTab" class="tab-content active">
+                <div id="recipeDetail" class="recipe-detail">
+                    <div class="empty-state">
+                        <h2>Select a recipe or create a new one</h2>
+                    </div>
                 </div>
             </div>
+            
+            <div id="grainsTab" class="tab-content">
+                <div class="recipe-detail">
+                    <h1>Grain Management</h1>
+                    <div class="add-ingredient-form">
+                        <h2>Add New Grain</h2>
+                        <div class="form-row">
+                            <div><label>Name</label><input type="text" id="newGrainName"></div>
+                            <div><label>PPG</label><input type="number" id="newGrainPPG" value="37"></div>
+                            <div><label>Lovibond</label><input type="number" id="newGrainLovibond" value="2"></div>
+                        </div>
+                        <button class="btn" onclick="addNewIngredient('grain')">Add Grain</button>
+                    </div>
+                    <div class="ingredient-table" id="grainsTable"></div>
+                </div>
+            </div>
+            
+            <div id="hopsTab" class="tab-content">
+                <div class="recipe-detail">
+                    <h1>Hop Management</h1>
+                    <div class="add-ingredient-form">
+                        <h2>Add New Hop</h2>
+                        <div class="form-row">
+                            <div><label>Name</label><input type="text" id="newHopName"></div>
+                            <div><label>Alpha Acid %</label><input type="number" id="newHopAlpha" value="5" step="0.1"></div>
+                        </div>
+                        <button class="btn" onclick="addNewIngredient('hop')">Add Hop</button>
+                    </div>
+                    <div class="ingredient-table" id="hopsTable"></div>
+                </div>
+            </div>
+            
+            <div id="yeastsTab" class="tab-content">
+                <div class="recipe-detail">
+                    <h1>Yeast Management</h1>
+                    <div class="add-ingredient-form">
+                        <h2>Add New Yeast</h2>
+                        <div class="form-row">
+                            <div><label>Name</label><input type="text" id="newYeastName"></div>
+                            <div><label>Type</label><select id="newYeastType"><option>Ale</option><option>Lager</option><option>Wheat</option><option>Wild</option></select></div>
+                        </div>
+                        <button class="btn" onclick="addNewIngredient('yeast')">Add Yeast</button>
+                    </div>
+                    <div class="ingredient-table" id="yeastsTable"></div>
+                </div>
+            </div>
+            
+            <div id="stylesTab" class="tab-content">
+                <div class="recipe-detail">
+                    <h1>BJCP Styles</h1>
+                    <p style="padding: 20px;">BJCP styles are built-in and cannot be modified.</p>
+                    <div class="ingredient-table" id="stylesTable"></div>
+                </div>
+            </div>
+            
+            <div id="miscTab" class="tab-content">
+                <div class="recipe-detail">
+                    <h1>Miscellaneous Ingredients</h1>
+                    <p style="padding: 20px;">Future feature for spices, fruits, and other additions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="tagModal" class="modal">
+        <div class="modal-content">
+            <h2>Edit Tags</h2>
+            <label>Tags (comma-separated)</label>
+            <input type="text" id="modalTags" placeholder="IPA, hoppy, experimental" style="width: 100%; margin-bottom: 15px;">
+            <button class="btn" onclick="saveTagsFromModal()">Save</button>
+            <button class="btn" style="background: #6b7280;" onclick="closeTagModal()">Cancel</button>
+        </div>
+    </div>
+    
+    <div id="ingredientModal" class="modal">
+        <div class="modal-content">
+            <h2 id="ingredientModalTitle">Edit Ingredient</h2>
+            <div id="ingredientModalContent"></div>
+            <button class="btn" onclick="saveIngredientFromModal()">Save</button>
+            <button class="btn" style="background: #6b7280;" onclick="closeIngredientModal()">Cancel</button>
+        </div>
+    </div>
+    
+    <div id="styleModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <h2 id="styleModalTitle">Style Details</h2>
+            <div id="styleModalContent"></div>
+            <button class="btn" style="background: #6b7280;" onclick="closeStyleModal()">Close</button>
         </div>
     </div>
     

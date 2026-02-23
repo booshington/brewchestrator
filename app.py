@@ -22,7 +22,11 @@ def save_config(config):
 
 def get_recipe_dir():
     config = load_config()
-    return config.get('recipe_directory', None)
+    recipe_dir = config.get('recipe_directory', 'recipes')
+    # Create default directory if it doesn't exist
+    if not os.path.exists(recipe_dir):
+        os.makedirs(recipe_dir)
+    return recipe_dir
 
 def load_recipes():
     recipe_dir = get_recipe_dir()
@@ -33,7 +37,8 @@ def load_recipes():
     for filename in os.listdir(recipe_dir):
         if filename.endswith('.json'):
             try:
-                with open(os.path.join(recipe_dir, filename), 'r') as f:
+                filepath = os.path.join(recipe_dir, filename)
+                with open(filepath, 'r') as f:
                     recipe = json.load(f)
                     recipe['filename'] = filename
                     recipes.append(recipe)
@@ -75,26 +80,36 @@ def index():
 
 @app.route('/api/directory', methods=['GET', 'POST'])
 def handle_directory():
-    if request.method == 'POST':
-        data = request.json
-        directory = data.get('directory', '')
-        
-        if directory and os.path.isdir(directory):
-            config = load_config()
-            config['recipe_directory'] = directory
-            save_config(config)
-            return jsonify({'success': True, 'directory': directory})
-        else:
-            return jsonify({'success': False, 'error': 'Invalid directory'}), 400
-    else:
-        return jsonify({'directory': get_recipe_dir()})
+    return jsonify({'directory': get_recipe_dir()})
 
 @app.route('/api/recipes')
 def get_recipes():
-    if not get_recipe_dir():
-        return jsonify({'error': 'No directory set'}), 400
     recipes = load_recipes()
     return jsonify(recipes)
+
+@app.route('/api/recipes/search')
+def search_recipes():
+    query = request.args.get('q', '').lower()
+    recipes = load_recipes()
+    
+    if not query:
+        return jsonify(recipes)
+    
+    filtered = []
+    for r in recipes:
+        if (query in r.get('name', '').lower() or
+            query in r.get('style', '').lower() or
+            query in r.get('tags', '').lower() or
+            any(query in g.get('name', '').lower() for g in r.get('grains', [])) or
+            any(query in h.get('name', '').lower() for h in r.get('hops', [])) or
+            any(query in y.get('name', '').lower() for y in r.get('yeasts', []))):
+            filtered.append(r)
+    
+    return jsonify(filtered)
+
+@app.route('/api/folders', methods=['GET', 'POST'])
+def handle_folders():
+    return jsonify([])
 
 @app.route('/api/recipe/<filename>')
 def get_recipe(filename):
@@ -111,6 +126,28 @@ def get_recipe(filename):
         recipe['filename'] = filename
         return jsonify(recipe)
 
+@app.route('/api/recipe/<path:filename>/move', methods=['PATCH'])
+def move_recipe(filename):
+    recipe_dir = get_recipe_dir()
+    if not recipe_dir:
+        return jsonify({'error': 'No directory set'}), 400
+    
+    tags = request.json.get('tags', '')
+    filepath = os.path.join(recipe_dir, filename)
+    
+    if not os.path.exists(filepath):
+        return jsonify({'error': 'Recipe not found'}), 404
+    
+    with open(filepath, 'r') as f:
+        recipe = json.load(f)
+    
+    recipe['tags'] = tags
+    
+    with open(filepath, 'w') as f:
+        json.dump(recipe, f, indent=2)
+    
+    return jsonify({'success': True, 'tags': tags})
+
 @app.route('/api/ingredients/search')
 def search_ingredients():
     query = request.args.get('q', '').lower()
@@ -123,14 +160,31 @@ def search_ingredients():
     
     return jsonify(results)
 
-@app.route('/api/ingredients', methods=['POST'])
-def add_ingredient():
+@app.route('/api/ingredients', methods=['GET', 'POST', 'DELETE', 'PUT'])
+def manage_ingredients():
     ingredients = load_ingredients()
-    new_ingredient = request.json
-    new_ingredient['id'] = max([i.get('id', 0) for i in ingredients], default=0) + 1
-    ingredients.append(new_ingredient)
-    save_ingredients(ingredients)
-    return jsonify(new_ingredient)
+    
+    if request.method == 'GET':
+        return jsonify(ingredients)
+    
+    if request.method == 'POST':
+        new_ingredient = request.json
+        new_ingredient['id'] = max([i.get('id', 0) for i in ingredients], default=0) + 1
+        ingredients.append(new_ingredient)
+        save_ingredients(ingredients)
+        return jsonify(new_ingredient)
+    
+    if request.method == 'PUT':
+        updated = request.json
+        ingredients = [updated if i.get('id') == updated.get('id') else i for i in ingredients]
+        save_ingredients(ingredients)
+        return jsonify(updated)
+    
+    if request.method == 'DELETE':
+        ingredient_id = request.json.get('id')
+        ingredients = [i for i in ingredients if i.get('id') != ingredient_id]
+        save_ingredients(ingredients)
+        return jsonify({'success': True})
 
 @app.route('/api/recipe/calculate', methods=['POST'])
 def calculate_recipe():
@@ -167,9 +221,10 @@ def modify_recipe(filename):
     if not get_recipe_dir():
         return jsonify({'error': 'No directory set'}), 400
     
+    recipe_dir = get_recipe_dir()
+    filepath = os.path.join(recipe_dir, filename)
+    
     if request.method == 'DELETE':
-        recipe_dir = get_recipe_dir()
-        filepath = os.path.join(recipe_dir, filename)
         if os.path.exists(filepath):
             os.remove(filepath)
             return jsonify({'success': True})
