@@ -1,4 +1,4 @@
-// v1.0.2
+// v1.0.3
 let recipes = [];
 let allRecipes = [];
 let currentRecipe = null;
@@ -780,24 +780,29 @@ async function deleteRecipe() {
 
 
 function switchTab(e, tabName) {
-    console.log('switchTab called:', tabName, 'event:', e);
-    try {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        
-        e.target.classList.add('active');
-        document.getElementById(tabName + 'Tab').classList.add('active');
-        
-        console.log('Tab switched to:', tabName);
-        
-        if (tabName === 'grains') loadIngredientTable('grain');
-        else if (tabName === 'hops') loadIngredientTable('hop');
-        else if (tabName === 'yeasts') loadIngredientTable('yeast');
-        else if (tabName === 'styles') loadStylesTable();
-        else if (tabName === 'misc') loadIngredientTable('misc');
-    } catch (error) {
-        console.error('Error in switchTab:', error);
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    
+    e.target.classList.add('active');
+    document.getElementById(tabName + 'Tab').classList.add('active');
+    
+    if (tabName === 'ingredients') {
+        loadIngredientTable('grain');
+    } else if (tabName === 'equipment') {
+        loadEquipmentTable();
+    } else if (tabName === 'styles') {
+        loadStylesTable();
     }
+}
+
+function switchIngredientSubTab(e, subTabName) {
+    document.querySelectorAll('#ingredientsTab .tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#ingredientsTab .sub-tab-content').forEach(t => t.style.display = 'none');
+    
+    e.target.classList.add('active');
+    document.getElementById(subTabName + 'SubTab').style.display = 'block';
+    
+    loadIngredientTable(subTabName === 'grains' ? 'grain' : subTabName === 'hops' ? 'hop' : subTabName === 'yeasts' ? 'yeast' : 'misc');
 }
 
 function switchRecipeSubTab(e, subTabName) {
@@ -806,6 +811,76 @@ function switchRecipeSubTab(e, subTabName) {
     
     e.target.classList.add('active');
     document.getElementById(subTabName + 'SubTab').style.display = 'block';
+}
+
+async function loadEquipmentTable() {
+    const res = await fetch('/api/equipment');
+    if (!res.ok) return;
+    
+    const equipment = await res.json();
+    const table = document.getElementById('equipmentTable');
+    
+    table.innerHTML = `
+        <table>
+            <thead><tr><th>Name</th><th>Batch Size (gal)</th><th>Boil Time (min)</th><th>Actions</th></tr></thead>
+            <tbody>
+                ${equipment.map(e => `
+                    <tr>
+                        <td>${e.name}</td>
+                        <td>${e.batch_size}</td>
+                        <td>${e.boil_time}</td>
+                        <td>
+                            <button class="btn btn-small" style="background: #dc2626;" onclick="deleteEquipment(${e.id})">Delete</button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+async function addNewEquipment() {
+    const equipment = {
+        name: document.getElementById('newEquipmentName').value,
+        batch_size: +document.getElementById('newEquipmentBatchSize').value,
+        boil_time: +document.getElementById('newEquipmentBoilTime').value
+    };
+    
+    if (!equipment.name) {
+        alert('Please enter a name');
+        return;
+    }
+    
+    const res = await fetch('/api/equipment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(equipment)
+    });
+    
+    if (res.ok) {
+        document.getElementById('newEquipmentName').value = '';
+        document.getElementById('newEquipmentBatchSize').value = '5';
+        document.getElementById('newEquipmentBoilTime').value = '60';
+        loadEquipmentTable();
+    } else {
+        alert('Failed to add equipment');
+    }
+}
+
+async function deleteEquipment(id) {
+    if (!confirm('Delete this equipment profile?')) return;
+    
+    const res = await fetch('/api/equipment', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+    });
+    
+    if (res.ok) {
+        loadEquipmentTable();
+    } else {
+        alert('Failed to delete equipment');
+    }
 }
 
 async function loadIngredientTable(type) {

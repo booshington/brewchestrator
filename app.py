@@ -378,6 +378,34 @@ def beerxml_to_recipe(xml_content):
     
     return recipe.to_dict()
 
+@app.route('/api/equipment', methods=['GET', 'POST', 'DELETE'])
+def manage_equipment():
+    equipment_file = 'equipment.json'
+    
+    if os.path.exists(equipment_file):
+        with open(equipment_file, 'r') as f:
+            equipment = json.load(f)
+    else:
+        equipment = []
+    
+    if request.method == 'GET':
+        return jsonify(equipment)
+    
+    if request.method == 'POST':
+        new_equipment = request.json
+        new_equipment['id'] = max([e.get('id', 0) for e in equipment], default=0) + 1
+        equipment.append(new_equipment)
+        with open(equipment_file, 'w') as f:
+            json.dump(equipment, f, indent=2)
+        return jsonify(new_equipment)
+    
+    if request.method == 'DELETE':
+        equipment_id = request.json.get('id')
+        equipment = [e for e in equipment if e.get('id') != equipment_id]
+        with open(equipment_file, 'w') as f:
+            json.dump(equipment, f, indent=2)
+        return jsonify({'success': True})
+
 @app.route('/api/bjcp/styles')
 def get_bjcp_styles():
     styles = [

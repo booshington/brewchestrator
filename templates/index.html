@@ -27,11 +27,9 @@
             <div class="tabs" style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; gap: 10px;">
                     <div class="tab active" onclick="switchTab(event, 'recipes')">Recipes</div>
-                    <div class="tab" onclick="switchTab(event, 'grains')">Grains</div>
-                    <div class="tab" onclick="switchTab(event, 'hops')">Hops</div>
-                    <div class="tab" onclick="switchTab(event, 'yeasts')">Yeasts</div>
+                    <div class="tab" onclick="switchTab(event, 'ingredients')">Ingredients</div>
+                    <div class="tab" onclick="switchTab(event, 'equipment')">Equipment</div>
                     <div class="tab" onclick="switchTab(event, 'styles')">BJCP Styles</div>
-                    <div class="tab" onclick="switchTab(event, 'misc')">Misc</div>
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <button class="btn btn-primary" onclick="createNewRecipe()">New Recipe</button>
@@ -50,49 +48,84 @@
                 </div>
             </div>
             
-            <div id="grainsTab" class="tab-content">
+            <div id="ingredientsTab" class="tab-content">
                 <div class="recipe-detail">
-                    <h1>Grain Management</h1>
-                    <div class="add-ingredient-form">
-                        <h2>Add New Grain</h2>
-                        <div class="form-row">
-                            <div><label>Name</label><input type="text" id="newGrainName"></div>
-                            <div><label>PPG</label><input type="number" id="newGrainPPG" value="37"></div>
-                            <div><label>Lovibond</label><input type="number" id="newGrainLovibond" value="2"></div>
-                        </div>
-                        <button class="btn" onclick="addNewIngredient('grain')">Add Grain</button>
+                    <h1>Ingredient Management</h1>
+                    <div class="tabs" style="margin: 20px 0; border-bottom: 2px solid #e5e7eb;">
+                        <div class="tab active" onclick="switchIngredientSubTab(event, 'grains')">Grains</div>
+                        <div class="tab" onclick="switchIngredientSubTab(event, 'hops')">Hops</div>
+                        <div class="tab" onclick="switchIngredientSubTab(event, 'yeasts')">Yeasts</div>
+                        <div class="tab" onclick="switchIngredientSubTab(event, 'misc')">Misc</div>
                     </div>
-                    <div class="ingredient-table" id="grainsTable"></div>
+                    
+                    <div id="grainsSubTab" class="sub-tab-content" style="display: block;">
+                        <h2>Grain Management</h2>
+                        <div class="add-ingredient-form">
+                            <h3>Add New Grain</h3>
+                            <div class="form-row">
+                                <div><label>Name</label><input type="text" id="newGrainName"></div>
+                                <div><label>PPG</label><input type="number" id="newGrainPPG" value="37"></div>
+                                <div><label>Lovibond</label><input type="number" id="newGrainLovibond" value="2"></div>
+                            </div>
+                            <button class="btn" onclick="addNewIngredient('grain')">Add Grain</button>
+                        </div>
+                        <div class="ingredient-table" id="grainsTable"></div>
+                    </div>
+                    
+                    <div id="hopsSubTab" class="sub-tab-content" style="display: none;">
+                        <h2>Hop Management</h2>
+                        <div class="add-ingredient-form">
+                            <h3>Add New Hop</h3>
+                            <div class="form-row">
+                                <div><label>Name</label><input type="text" id="newHopName"></div>
+                                <div><label>Alpha Acid %</label><input type="number" id="newHopAlpha" value="5" step="0.1"></div>
+                            </div>
+                            <button class="btn" onclick="addNewIngredient('hop')">Add Hop</button>
+                        </div>
+                        <div class="ingredient-table" id="hopsTable"></div>
+                    </div>
+                    
+                    <div id="yeastsSubTab" class="sub-tab-content" style="display: none;">
+                        <h2>Yeast Management</h2>
+                        <div class="add-ingredient-form">
+                            <h3>Add New Yeast</h3>
+                            <div class="form-row">
+                                <div><label>Name</label><input type="text" id="newYeastName"></div>
+                                <div><label>Type</label><select id="newYeastType"><option>Ale</option><option>Lager</option><option>Wheat</option><option>Wild</option></select></div>
+                            </div>
+                            <button class="btn" onclick="addNewIngredient('yeast')">Add Yeast</button>
+                        </div>
+                        <div class="ingredient-table" id="yeastsTable"></div>
+                    </div>
+                    
+                    <div id="miscSubTab" class="sub-tab-content" style="display: none;">
+                        <h2>Miscellaneous Ingredients</h2>
+                        <div class="add-ingredient-form">
+                            <h3>Add New Misc Ingredient</h3>
+                            <div class="form-row">
+                                <div><label>Name</label><input type="text" id="newMiscName"></div>
+                                <div><label>Type</label><select id="newMiscType"><option>Spice</option><option>Fruit</option><option>Fining</option><option>Other</option></select></div>
+                            </div>
+                            <button class="btn" onclick="addNewIngredient('misc')">Add Misc Ingredient</button>
+                        </div>
+                        <div class="ingredient-table" id="miscTable"></div>
+                    </div>
                 </div>
             </div>
             
-            <div id="hopsTab" class="tab-content">
+            <div id="equipmentTab" class="tab-content">
                 <div class="recipe-detail">
-                    <h1>Hop Management</h1>
+                    <h1>Equipment Profiles</h1>
                     <div class="add-ingredient-form">
-                        <h2>Add New Hop</h2>
+                        <h2>Add New Equipment Profile</h2>
                         <div class="form-row">
-                            <div><label>Name</label><input type="text" id="newHopName"></div>
-                            <div><label>Alpha Acid %</label><input type="number" id="newHopAlpha" value="5" step="0.1"></div>
+                            <div><label>Name</label><input type="text" id="newEquipmentName"></div>
+                            <div><label>Batch Size (gal)</label><input type="number" id="newEquipmentBatchSize" value="5" step="0.1"></div>
+                            <div><label>Boil Time (min)</label><input type="number" id="newEquipmentBoilTime" value="60"></div>
                         </div>
-                        <button class="btn" onclick="addNewIngredient('hop')">Add Hop</button>
+                        <button class="btn" onclick="addNewEquipment()">Add Equipment</button>
                     </div>
-                    <div class="ingredient-table" id="hopsTable"></div>
-                </div>
-            </div>
-            
-            <div id="yeastsTab" class="tab-content">
-                <div class="recipe-detail">
-                    <h1>Yeast Management</h1>
-                    <div class="add-ingredient-form">
-                        <h2>Add New Yeast</h2>
-                        <div class="form-row">
-                            <div><label>Name</label><input type="text" id="newYeastName"></div>
-                            <div><label>Type</label><select id="newYeastType"><option>Ale</option><option>Lager</option><option>Wheat</option><option>Wild</option></select></div>
-                        </div>
-                        <button class="btn" onclick="addNewIngredient('yeast')">Add Yeast</button>
-                    </div>
-                    <div class="ingredient-table" id="yeastsTable"></div>
+                    <div class="ingredient-table" id="equipmentTable"></div>
                 </div>
             </div>
             
@@ -104,50 +137,48 @@
                 </div>
             </div>
             
-            <div id="miscTab" class="tab-content">
+            <div id="stylesTab" class="tab-content">
+
                 <div class="recipe-detail">
-                    <h1>Miscellaneous Ingredients</h1>
-                    <div class="add-ingredient-form">
-                        <h2>Add New Misc Ingredient</h2>
-                        <div class="form-row">
-                            <div><label>Name</label><input type="text" id="newMiscName"></div>
-                            <div><label>Type</label><select id="newMiscType"><option>Spice</option><option>Fruit</option><option>Fining</option><option>Other</option></select></div>
-                        </div>
-                        <button class="btn" onclick="addNewIngredient('misc')">Add Misc Ingredient</button>
-                    </div>
-                    <div class="ingredient-table" id="miscTable"></div>
+                    <h1>BJCP Styles</h1>
+                    <p style="padding: 20px;">Duplicate tab - this should be removed</p>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <div id="tagModal" class="modal">
         <div class="modal-content">
             <h2>Edit Tags</h2>
-            <label>Tags (comma-separated)</label>
-            <input type="text" id="modalTags" placeholder="IPA, hoppy, experimental" style="width: 100%; margin-bottom: 15px;">
-            <button class="btn" onclick="saveTagsFromModal()">Save</button>
-            <button class="btn" style="background: #6b7280;" onclick="closeTagModal()">Cancel</button>
+            <input type="text" id="modalTags" placeholder="comma, separated, tags">
+            <div style="margin-top: 15px;">
+                <button class="btn" onclick="saveTagsFromModal()">Save</button>
+                <button class="btn" style="background: #6b7280;" onclick="closeTagModal()">Cancel</button>
+            </div>
         </div>
     </div>
-    
+
     <div id="ingredientModal" class="modal">
         <div class="modal-content">
             <h2 id="ingredientModalTitle">Edit Ingredient</h2>
             <div id="ingredientModalContent"></div>
-            <button class="btn" onclick="saveIngredientFromModal()">Save</button>
-            <button class="btn" style="background: #6b7280;" onclick="closeIngredientModal()">Cancel</button>
+            <div style="margin-top: 15px;">
+                <button class="btn" onclick="saveIngredientFromModal()">Save</button>
+                <button class="btn" style="background: #6b7280;" onclick="closeIngredientModal()">Cancel</button>
+            </div>
         </div>
     </div>
-    
+
     <div id="styleModal" class="modal">
-        <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-content">
             <h2 id="styleModalTitle">Style Details</h2>
             <div id="styleModalContent"></div>
-            <button class="btn" style="background: #6b7280;" onclick="closeStyleModal()">Close</button>
+            <div style="margin-top: 15px;">
+                <button class="btn" onclick="closeStyleModal()">Close</button>
+            </div>
         </div>
     </div>
-    
-    <script src="{{ url_for('static', filename='app.js') }}"></script>
+
+    <script src="{{ url_for('static', filename='app.js') }}?v=1.0.3"></script>
 </body>
 </html>

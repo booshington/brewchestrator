@@ -133,5 +133,11 @@
     "ppg": 35,
     "lovibond": 2,
     "id": 21
+  },
+  {
+    "alpha": 19,
+    "id": 22,
+    "name": "Galaxy",
+    "type": "hop"
   }
 ]
