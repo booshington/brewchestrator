@@ -1,11 +1,11 @@
-from flask import Flask, render_template, request, jsonify, Response, session
+from flask import Flask, render_template, request, jsonify, Response
 import json
 import os
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
+from models import Recipe, Grain, Hop, Yeast
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
 
 INGREDIENTS_FILE = 'ingredients.json'
 CONFIG_FILE = 'config.json'
@@ -67,21 +67,7 @@ def save_ingredients(ingredients):
     with open(INGREDIENTS_FILE, 'w') as f:
         json.dump(ingredients, f, indent=2)
 
-def calculate_og(grains, batch_size):
-    total_points = sum(g['amount'] * g['ppg'] * g['efficiency'] / 100 for g in grains)
-    return 1 + (total_points / batch_size / 1000)
 
-def calculate_ibu(hops, batch_size, og):
-    total_ibu = 0
-    for hop in hops:
-        utilization = 1.65 * (0.000125 ** (og - 1)) * ((1 - 2.718 ** (-0.04 * hop['time'])) / 4.15)
-        aau = hop['alpha'] * hop['amount']
-        total_ibu += (aau * utilization * 7490) / batch_size
-    return total_ibu
-
-def calculate_srm(grains, batch_size):
-    mcu = sum(g['amount'] * g['lovibond'] for g in grains) / batch_size
-    return 1.4922 * (mcu ** 0.6859)
 
 @app.route('/')
 def index():
@@ -149,23 +135,32 @@ def add_ingredient():
 @app.route('/api/recipe/calculate', methods=['POST'])
 def calculate_recipe():
     data = request.json
-    batch_size = data.get('batch_size', 5)
+    recipe = Recipe(
+        data.get('name', 'temp'),
+        data.get('brewer', 'temp'),
+        data.get('batch_size', 5)
+    )
     
-    og = calculate_og(data.get('grains', []), batch_size)
-    ibu = calculate_ibu(data.get('hops', []), batch_size, og)
-    srm = calculate_srm(data.get('grains', []), batch_size)
+    for g in data.get('grains', []):
+        recipe.add_grain(Grain.from_dict(g))
     
-    return jsonify({'og': round(og, 3), 'ibu': round(ibu, 1), 'srm': round(srm, 1)})
+    for h in data.get('hops', []):
+        recipe.add_hop(Hop.from_dict(h))
+    
+    return jsonify(recipe.get_stats())
 
 @app.route('/api/recipe', methods=['POST'])
 def create_recipe():
     if not get_recipe_dir():
         return jsonify({'error': 'No directory set'}), 400
     
-    recipe = request.json
-    filename = save_recipe(recipe)
-    recipe['filename'] = filename
-    return jsonify(recipe)
+    data = request.json
+    recipe = Recipe.from_dict(data)
+    recipe_dict = recipe.to_dict()
+    
+    filename = save_recipe(recipe_dict)
+    recipe_dict['filename'] = filename
+    return jsonify(recipe_dict)
 
 @app.route('/api/recipe/<filename>', methods=['PUT', 'DELETE'])
 def modify_recipe(filename):
@@ -180,10 +175,12 @@ def modify_recipe(filename):
             return jsonify({'success': True})
         return jsonify({'error': 'Recipe not found'}), 404
     
-    recipe = request.json
-    recipe['filename'] = filename
-    save_recipe(recipe)
-    return jsonify(recipe)
+    data = request.json
+    recipe = Recipe.from_dict(data)
+    recipe_dict = recipe.to_dict()
+    recipe_dict['filename'] = filename
+    save_recipe(recipe_dict)
+    return jsonify(recipe_dict)
 
 @app.route('/api/recipe/<filename>/export')
 def export_beerxml(filename):
@@ -269,47 +266,40 @@ def beerxml_to_recipe(xml_content):
     root = ET.fromstring(xml_content)
     rec = root.find('RECIPE')
     
-    recipe = {
-        'name': rec.findtext('NAME', ''),
-        'brewer': rec.findtext('BREWER', ''),
-        'batch_size': float(rec.findtext('BATCH_SIZE', '18.927')) / 3.78541,
-        'style': rec.findtext('STYLE/NAME', ''),
-        'grains': [],
-        'hops': [],
-        'yeasts': []
-    }
+    recipe = Recipe(
+        rec.findtext('NAME', ''),
+        rec.findtext('BREWER', ''),
+        float(rec.findtext('BATCH_SIZE', '18.927')) / 3.78541,
+        rec.findtext('STYLE/NAME', '')
+    )
     
     for ferm in rec.findall('.//FERMENTABLES/FERMENTABLE'):
-        recipe['grains'].append({
-            'name': ferm.findtext('NAME', ''),
-            'amount': float(ferm.findtext('AMOUNT', '0')) / 0.453592,
-            'ppg': int(float(ferm.findtext('YIELD', '80')) / 100 * 46),
-            'lovibond': float(ferm.findtext('COLOR', '2')),
-            'efficiency': 75
-        })
+        grain = Grain(
+            ferm.findtext('NAME', ''),
+            float(ferm.findtext('AMOUNT', '0')) / 0.453592,
+            int(float(ferm.findtext('YIELD', '80')) / 100 * 46),
+            float(ferm.findtext('COLOR', '2')),
+            75
+        )
+        recipe.add_grain(grain)
     
-    for hop in rec.findall('.//HOPS/HOP'):
-        recipe['hops'].append({
-            'name': hop.findtext('NAME', ''),
-            'amount': float(hop.findtext('AMOUNT', '0')) / 0.0283495,
-            'alpha': float(hop.findtext('ALPHA', '5')),
-            'time': int(float(hop.findtext('TIME', '60')))
-        })
+    for hop_elem in rec.findall('.//HOPS/HOP'):
+        hop = Hop(
+            hop_elem.findtext('NAME', ''),
+            float(hop_elem.findtext('AMOUNT', '0')) / 0.0283495,
+            float(hop_elem.findtext('ALPHA', '5')),
+            int(float(hop_elem.findtext('TIME', '60')))
+        )
+        recipe.add_hop(hop)
     
-    for yeast in rec.findall('.//YEASTS/YEAST'):
-        recipe['yeasts'].append({
-            'name': yeast.findtext('NAME', ''),
-            'type': yeast.findtext('TYPE', 'Ale')
-        })
+    for yeast_elem in rec.findall('.//YEASTS/YEAST'):
+        yeast = Yeast(
+            yeast_elem.findtext('NAME', ''),
+            yeast_elem.findtext('TYPE', 'Ale')
+        )
+        recipe.add_yeast(yeast)
     
-    batch_size = recipe['batch_size']
-    og = calculate_og(recipe['grains'], batch_size)
-    ibu = calculate_ibu(recipe['hops'], batch_size, og)
-    srm = calculate_srm(recipe['grains'], batch_size)
-    
-    recipe.update({'og': round(og, 3), 'ibu': round(ibu, 1), 'srm': round(srm, 1)})
-    
-    return recipe
+    return recipe.to_dict()
 
 @app.route('/api/bjcp/styles')
 def get_bjcp_styles():
