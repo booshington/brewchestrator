@@ -237,6 +237,28 @@ def modify_recipe(filename):
     save_recipe(recipe_dict)
     return jsonify(recipe_dict)
 
+@app.route('/api/recipe/<filename>/tags', methods=['PATCH'])
+def update_recipe_tags(filename):
+    recipe_dir = get_recipe_dir()
+    if not recipe_dir:
+        return jsonify({'error': 'No directory set'}), 400
+    
+    tags = request.json.get('tags', '')
+    filepath = os.path.join(recipe_dir, filename)
+    
+    if not os.path.exists(filepath):
+        return jsonify({'error': 'Recipe not found'}), 404
+    
+    with open(filepath, 'r') as f:
+        recipe = json.load(f)
+    
+    recipe['tags'] = tags
+    
+    with open(filepath, 'w') as f:
+        json.dump(recipe, f, indent=2)
+    
+    return jsonify({'success': True, 'tags': tags})
+
 @app.route('/api/recipe/<filename>/export')
 def export_beerxml(filename):
     recipe_dir = get_recipe_dir()

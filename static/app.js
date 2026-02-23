@@ -47,14 +47,18 @@ function setupResizeHandle() {
 
 
 async function loadRecipes() {
+    console.log('loadRecipes called');
     const res = await fetch('/api/recipes');
+    console.log('API response status:', res.status);
     if (!res.ok) {
+        console.error('Failed to load recipes:', res.status);
         recipes = [];
         allRecipes = [];
         renderRecipeList();
         return;
     }
     allRecipes = await res.json();
+    console.log('Loaded recipes:', allRecipes);
     recipes = allRecipes;
     
     loadTagFilters();
@@ -68,6 +72,24 @@ function renderRecipeList() {
         list.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No recipes found</div>';
         return;
     }
+    
+    list.innerHTML = recipes.map(r => createRecipeCard(r)).join('');
+}
+
+function createRecipeCard(r) {
+    const isActive = currentRecipe && currentRecipe.filename === r.filename ? 'active' : '';
+    const tagBadges = r.tags ? r.tags.split(',').map(t => `<span class="tag-badge">${t.trim()}</span>`).join('') : '';
+    const escapedTags = (r.tags || '').replace(/'/g, "\\'");
+    
+    return `
+        <div class="recipe-item ${isActive}" data-filename="${r.filename}" onclick="viewRecipe('${r.filename}')">
+            <h3>${r.name}</h3>
+            <p>${r.style || 'No style'} • OG: ${r.og} • IBU: ${r.ibu}</p>
+            ${r.tags ? `<div>${tagBadges}</div>` : ''}
+            <button class="btn btn-small" style="margin-top: 5px; font-size: 0.75em; padding: 3px 8px;" 
+                onclick="event.stopPropagation(); openTagModal('${r.filename}', '${escapedTags}');">✏️ Tags</button>
+        </div>
+    `;
 }
 
 function loadTagFilters() {
