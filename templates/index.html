@@ -12,14 +12,11 @@
                 <h1>🍺 Recipes</h1>
                 <div id="recipeActions">
                     <input type="text" id="searchBox" class="search-box" placeholder="Search recipes..." oninput="handleSearch()">
-                    <button class="btn btn-primary" onclick="createNewRecipe()">New Recipe</button>
-                    <label class="btn" style="background: #059669; cursor: pointer;">
-                        Import
-                        <input type="file" id="importFile" accept=".xml" style="display: none;">
-                    </label>
                     <div class="folder-section">
                         <label style="font-size: 0.85em; color: #666; display: block; margin: 15px 0 5px;">Filter by Tags</label>
-                        <div id="tagFilter"></div>
+                        <select id="tagFilter" onchange="filterByTag(this.value || null)" style="width: 100%; padding: 8px;">
+                            <option value="">All Recipes</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -27,13 +24,22 @@
         </div>
         
         <div class="right-column">
-            <div class="tabs">
-                <div class="tab active" onclick="switchTab(event, 'recipes')">Recipes</div>
-                <div class="tab" onclick="switchTab(event, 'grains')">Grains</div>
-                <div class="tab" onclick="switchTab(event, 'hops')">Hops</div>
-                <div class="tab" onclick="switchTab(event, 'yeasts')">Yeasts</div>
-                <div class="tab" onclick="switchTab(event, 'styles')">BJCP Styles</div>
-                <div class="tab" onclick="switchTab(event, 'misc')">Misc</div>
+            <div class="tabs" style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; gap: 10px;">
+                    <div class="tab active" onclick="switchTab(event, 'recipes')">Recipes</div>
+                    <div class="tab" onclick="switchTab(event, 'grains')">Grains</div>
+                    <div class="tab" onclick="switchTab(event, 'hops')">Hops</div>
+                    <div class="tab" onclick="switchTab(event, 'yeasts')">Yeasts</div>
+                    <div class="tab" onclick="switchTab(event, 'styles')">BJCP Styles</div>
+                    <div class="tab" onclick="switchTab(event, 'misc')">Misc</div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="createNewRecipe()">New Recipe</button>
+                    <label class="btn" style="background: #059669; cursor: pointer;">
+                        Import
+                        <input type="file" id="importFile" accept=".xml" style="display: none;">
+                    </label>
+                </div>
             </div>
             
             <div id="recipesTab" class="tab-content active">

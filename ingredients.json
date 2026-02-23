@@ -1,22 +1,137 @@
 [
-  {"id": 1, "name": "Pale Malt (2-Row)", "type": "grain", "ppg": 37, "lovibond": 2},
-  {"id": 2, "name": "Pilsner Malt", "type": "grain", "ppg": 37, "lovibond": 1.5},
-  {"id": 3, "name": "Munich Malt", "type": "grain", "ppg": 35, "lovibond": 9},
-  {"id": 4, "name": "Vienna Malt", "type": "grain", "ppg": 35, "lovibond": 4},
-  {"id": 5, "name": "Caramel/Crystal 60L", "type": "grain", "ppg": 34, "lovibond": 60},
-  {"id": 6, "name": "Chocolate Malt", "type": "grain", "ppg": 34, "lovibond": 350},
-  {"id": 7, "name": "Roasted Barley", "type": "grain", "ppg": 25, "lovibond": 300},
-  {"id": 8, "name": "Wheat Malt", "type": "grain", "ppg": 38, "lovibond": 2},
-  {"id": 9, "name": "Cascade", "type": "hop", "alpha": 5.5},
-  {"id": 10, "name": "Centennial", "type": "hop", "alpha": 10},
-  {"id": 11, "name": "Citra", "type": "hop", "alpha": 12},
-  {"id": 12, "name": "Mosaic", "type": "hop", "alpha": 12.5},
-  {"id": 13, "name": "Simcoe", "type": "hop", "alpha": 13},
-  {"id": 14, "name": "Saaz", "type": "hop", "alpha": 3.5},
-  {"id": 15, "name": "Hallertau", "type": "hop", "alpha": 4},
-  {"id": 16, "name": "US-05 (American Ale)", "type": "yeast", "yeast_type": "Ale"},
-  {"id": 17, "name": "WLP001 (California Ale)", "type": "yeast", "yeast_type": "Ale"},
-  {"id": 18, "name": "S-04 (English Ale)", "type": "yeast", "yeast_type": "Ale"},
-  {"id": 19, "name": "WLP300 (Hefeweizen)", "type": "yeast", "yeast_type": "Wheat"},
-  {"id": 20, "name": "W-34/70 (German Lager)", "type": "yeast", "yeast_type": "Lager"}
+  {
+    "id": 1,
+    "name": "Pale Malt (2-Row)",
+    "type": "grain",
+    "ppg": 37,
+    "lovibond": 2
+  },
+  {
+    "id": 2,
+    "name": "Pilsner Malt",
+    "type": "grain",
+    "ppg": 37,
+    "lovibond": 1.5
+  },
+  {
+    "id": 3,
+    "name": "Munich Malt",
+    "type": "grain",
+    "ppg": 35,
+    "lovibond": 9
+  },
+  {
+    "id": 4,
+    "name": "Vienna Malt",
+    "type": "grain",
+    "ppg": 35,
+    "lovibond": 4
+  },
+  {
+    "id": 5,
+    "name": "Caramel/Crystal 60L",
+    "type": "grain",
+    "ppg": 34,
+    "lovibond": 60
+  },
+  {
+    "id": 6,
+    "name": "Chocolate Malt",
+    "type": "grain",
+    "ppg": 34,
+    "lovibond": 350
+  },
+  {
+    "id": 7,
+    "name": "Roasted Barley",
+    "type": "grain",
+    "ppg": 25,
+    "lovibond": 300
+  },
+  {
+    "id": 8,
+    "name": "Wheat Malt",
+    "type": "grain",
+    "ppg": 38,
+    "lovibond": 2
+  },
+  {
+    "id": 9,
+    "name": "Cascade",
+    "type": "hop",
+    "alpha": 5.5
+  },
+  {
+    "id": 10,
+    "name": "Centennial",
+    "type": "hop",
+    "alpha": 10
+  },
+  {
+    "id": 11,
+    "name": "Citra",
+    "type": "hop",
+    "alpha": 12
+  },
+  {
+    "id": 12,
+    "name": "Mosaic",
+    "type": "hop",
+    "alpha": 12.5
+  },
+  {
+    "id": 13,
+    "name": "Simcoe",
+    "type": "hop",
+    "alpha": 13
+  },
+  {
+    "id": 14,
+    "name": "Saaz",
+    "type": "hop",
+    "alpha": 3.5
+  },
+  {
+    "id": 15,
+    "name": "Hallertau",
+    "type": "hop",
+    "alpha": 4
+  },
+  {
+    "id": 16,
+    "name": "US-05 (American Ale)",
+    "type": "yeast",
+    "yeast_type": "Ale"
+  },
+  {
+    "id": 17,
+    "name": "WLP001 (California Ale)",
+    "type": "yeast",
+    "yeast_type": "Ale"
+  },
+  {
+    "id": 18,
+    "name": "S-04 (English Ale)",
+    "type": "yeast",
+    "yeast_type": "Ale"
+  },
+  {
+    "id": 19,
+    "name": "WLP300 (Hefeweizen)",
+    "type": "yeast",
+    "yeast_type": "Wheat"
+  },
+  {
+    "id": 20,
+    "name": "W-34/70 (German Lager)",
+    "type": "yeast",
+    "yeast_type": "Lager"
+  },
+  {
+    "type": "grain",
+    "name": "Honey",
+    "ppg": 35,
+    "lovibond": 2,
+    "id": 21
+  }
 ]

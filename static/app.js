@@ -101,14 +101,10 @@ function loadTagFilters() {
     });
     
     const tagFilter = document.getElementById('tagFilter');
-    if (allTags.size === 0) {
-        tagFilter.innerHTML = '<p style="color: #999; font-size: 0.9em;">No tags yet</p>';
-        return;
-    }
-    
-    tagFilter.innerHTML = Array.from(allTags).sort().map(tag => 
-        `<div class="folder-item ${selectedTag === tag ? 'active' : ''}" onclick="filterByTag('${tag}')">🏷️ ${tag}</div>`
-    ).join('') + '<div class="folder-item" onclick="filterByTag(null)">Show All</div>';
+    tagFilter.innerHTML = '<option value="">All Recipes</option>' + 
+        Array.from(allTags).sort().map(tag => 
+            `<option value="${tag}" ${selectedTag === tag ? 'selected' : ''}>${tag}</option>`
+        ).join('');
 }
 
 function filterByTag(tag) {
@@ -129,6 +125,12 @@ async function viewRecipe(filename) {
     const res = await fetch(`/api/recipe/${filename}`);
     currentRecipe = await res.json();
     editMode = false;
+    
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelector('.tab[onclick*="recipes"]').classList.add('active');
+    document.getElementById('recipesTab').classList.add('active');
+    
     renderRecipeDetail();
     renderRecipeList();
 }
