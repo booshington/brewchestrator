@@ -107,7 +107,15 @@
             <div id="miscTab" class="tab-content">
                 <div class="recipe-detail">
                     <h1>Miscellaneous Ingredients</h1>
-                    <p style="padding: 20px;">Future feature for spices, fruits, and other additions.</p>
+                    <div class="add-ingredient-form">
+                        <h2>Add New Misc Ingredient</h2>
+                        <div class="form-row">
+                            <div><label>Name</label><input type="text" id="newMiscName"></div>
+                            <div><label>Type</label><select id="newMiscType"><option>Spice</option><option>Fruit</option><option>Fining</option><option>Other</option></select></div>
+                        </div>
+                        <button class="btn" onclick="addNewIngredient('misc')">Add Misc Ingredient</button>
+                    </div>
+                    <div class="ingredient-table" id="miscTable"></div>
                 </div>
             </div>
         </div>

@@ -166,8 +166,6 @@ function editRecipe() {
 
 function renderRecipeDetail() {
     const detail = document.getElementById('recipeDetail');
-    
-    // Get style info for ranges
     const styles = JSON.parse(sessionStorage.getItem('bjcpStyles') || '[]');
     const recipeStyle = styles.find(s => currentRecipe.style && currentRecipe.style.includes(s.name));
     
@@ -181,45 +179,67 @@ function renderRecipeDetail() {
             </div>
         </div>
         
-        <div class="form-section">
-            <h2>Details</h2>
-            <p><strong>Brewer:</strong> ${currentRecipe.brewer}</p>
-            <p><strong>Style:</strong> ${currentRecipe.style || 'None'}</p>
-            <p><strong>Batch Size:</strong> ${currentRecipe.batch_size} gallons</p>
-            ${currentRecipe.tags ? `<p><strong>Tags:</strong> ${currentRecipe.tags}</p>` : ''}
+        <div class="tabs" style="margin: 20px 0; border-bottom: 2px solid #e5e7eb;">
+            <div class="tab active" onclick="switchRecipeSubTab(event, 'ingredients')">Ingredients</div>
+            <div class="tab" onclick="switchRecipeSubTab(event, 'mash')">Mash Schedule</div>
+            <div class="tab" onclick="switchRecipeSubTab(event, 'notes')">Notes</div>
         </div>
         
-        <div class="stats-panel">
-            <h2>Calculated Stats</h2>
-            ${recipeStyle ? renderStatBars(currentRecipe, recipeStyle) : renderSimpleStats(currentRecipe)}
+        <div id="ingredientsSubTab" class="sub-tab-content" style="display: block;">
+            <div class="form-section">
+                <h2>Details</h2>
+                <p><strong>Brewer:</strong> ${currentRecipe.brewer}</p>
+                <p><strong>Style:</strong> ${currentRecipe.style || 'None'}</p>
+                <p><strong>Batch Size:</strong> ${currentRecipe.batch_size} gallons</p>
+                ${currentRecipe.tags ? `<p><strong>Tags:</strong> ${currentRecipe.tags}</p>` : ''}
+            </div>
+            
+            <div class="stats-panel">
+                <h2>Calculated Stats</h2>
+                ${recipeStyle ? renderStatBars(currentRecipe, recipeStyle) : renderSimpleStats(currentRecipe)}
+            </div>
+            
+            ${currentRecipe.grains && currentRecipe.grains.length > 0 ? `
+            <div class="form-section">
+                <h2>Grains</h2>
+                ${currentRecipe.grains.map(g => `
+                    <p><strong>${g.name}:</strong> ${g.amount} lbs (${g.lovibond}°L, ${g.ppg} PPG)</p>
+                `).join('')}
+            </div>
+            ` : ''}
+            
+            ${currentRecipe.hops && currentRecipe.hops.length > 0 ? `
+            <div class="form-section">
+                <h2>Hops</h2>
+                ${currentRecipe.hops.map(h => `
+                    <p><strong>${h.name}:</strong> ${h.amount} oz (${h.alpha}% AA, ${h.time} min)</p>
+                `).join('')}
+            </div>
+            ` : ''}
+            
+            ${currentRecipe.yeasts && currentRecipe.yeasts.length > 0 ? `
+            <div class="form-section">
+                <h2>Yeast</h2>
+                ${currentRecipe.yeasts.map(y => `
+                    <p><strong>${y.name}</strong> (${y.type})</p>
+                `).join('')}
+            </div>
+            ` : ''}
         </div>
         
-        ${currentRecipe.grains && currentRecipe.grains.length > 0 ? `
-        <div class="form-section">
-            <h2>Grains</h2>
-            ${currentRecipe.grains.map(g => `
-                <p><strong>${g.name}:</strong> ${g.amount} lbs (${g.lovibond}°L, ${g.ppg} PPG)</p>
-            `).join('')}
+        <div id="mashSubTab" class="sub-tab-content" style="display: none;">
+            <div class="form-section">
+                <h2>Mash Schedule</h2>
+                <p style="color: #666;">Mash schedule feature coming soon...</p>
+            </div>
         </div>
-        ` : ''}
         
-        ${currentRecipe.hops && currentRecipe.hops.length > 0 ? `
-        <div class="form-section">
-            <h2>Hops</h2>
-            ${currentRecipe.hops.map(h => `
-                <p><strong>${h.name}:</strong> ${h.amount} oz (${h.alpha}% AA, ${h.time} min)</p>
-            `).join('')}
+        <div id="notesSubTab" class="sub-tab-content" style="display: none;">
+            <div class="form-section">
+                <h2>Brew Notes</h2>
+                <p style="color: #666;">${currentRecipe.notes || 'No notes yet...'}</p>
+            </div>
         </div>
-        ` : ''}
-        
-        ${currentRecipe.yeasts && currentRecipe.yeasts.length > 0 ? `
-        <div class="form-section">
-            <h2>Yeast</h2>
-            ${currentRecipe.yeasts.map(y => `
-                <p><strong>${y.name}</strong> (${y.type})</p>
-            `).join('')}
-        </div>
-        ` : ''}
     `;
 }
 
@@ -774,9 +794,18 @@ function switchTab(e, tabName) {
         else if (tabName === 'hops') loadIngredientTable('hop');
         else if (tabName === 'yeasts') loadIngredientTable('yeast');
         else if (tabName === 'styles') loadStylesTable();
+        else if (tabName === 'misc') loadIngredientTable('misc');
     } catch (error) {
         console.error('Error in switchTab:', error);
     }
+}
+
+function switchRecipeSubTab(e, subTabName) {
+    document.querySelectorAll('#recipeDetail .tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.sub-tab-content').forEach(t => t.style.display = 'none');
+    
+    e.target.classList.add('active');
+    document.getElementById(subTabName + 'SubTab').style.display = 'block';
 }
 
 async function loadIngredientTable(type) {
@@ -790,13 +819,14 @@ async function loadIngredientTable(type) {
     const ingredients = await res.json();
     const filtered = ingredients.filter(i => i.type === type);
     
-    const tableId = type === 'grain' ? 'grainsTable' : type === 'hop' ? 'hopsTable' : 'yeastsTable';
+    const tableId = type === 'grain' ? 'grainsTable' : type === 'hop' ? 'hopsTable' : type === 'yeast' ? 'yeastsTable' : 'miscTable';
     const table = document.getElementById(tableId);
     
     let headers = [];
     if (type === 'grain') headers = ['Name', 'PPG', 'Lovibond', 'Actions'];
     else if (type === 'hop') headers = ['Name', 'Alpha Acid %', 'Actions'];
     else if (type === 'yeast') headers = ['Name', 'Type', 'Actions'];
+    else if (type === 'misc') headers = ['Name', 'Type', 'Actions'];
     
     table.innerHTML = `
         <table>
@@ -807,6 +837,7 @@ async function loadIngredientTable(type) {
                     if (type === 'grain') cells = [i.name, i.ppg, i.lovibond];
                     else if (type === 'hop') cells = [i.name, i.alpha];
                     else if (type === 'yeast') cells = [i.name, i.yeast_type || i.type];
+                    else if (type === 'misc') cells = [i.name, i.misc_type || i.type];
                     
                     return `<tr>
                         ${cells.map(c => `<td>${c}</td>`).join('')}
@@ -857,6 +888,9 @@ async function addNewIngredient(type) {
     } else if (type === 'yeast') {
         ingredient.name = document.getElementById('newYeastName').value;
         ingredient.yeast_type = document.getElementById('newYeastType').value;
+    } else if (type === 'misc') {
+        ingredient.name = document.getElementById('newMiscName').value;
+        ingredient.misc_type = document.getElementById('newMiscType').value;
     }
     
     if (!ingredient.name) {
@@ -880,6 +914,8 @@ async function addNewIngredient(type) {
             document.getElementById('newHopAlpha').value = '5';
         } else if (type === 'yeast') {
             document.getElementById('newYeastName').value = '';
+        } else if (type === 'misc') {
+            document.getElementById('newMiscName').value = '';
         }
         loadIngredientTable(type);
     } else {
